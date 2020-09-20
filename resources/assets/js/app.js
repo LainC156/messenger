@@ -9,6 +9,11 @@ require('./bootstrap');
 
 window.Vue = require('vue');
 
+
+import BootstrapVue from 'bootstrap-vue';
+Vue.use(BootstrapVue);
+
+
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -18,5 +23,16 @@ window.Vue = require('vue');
 Vue.component('example', require('./components/Example.vue'));
 
 const app = new Vue({
-    el: '#app'
+    el: '#app',
+    methods: {
+        logout() {
+            document.getElementById('logout_form').submit();
+        }
+    },
 });
+
+/**
+ * Define logout method globally, because could be used anytime
+ * 
+ */
+
