@@ -2,7 +2,7 @@
 
 @section('content')
 <b-container>
-    <b-row>
+    <b-row align-h="center">
         <b-col cols="8">
             <b-card class="my-3" title="Registro">
                 @if($errors->any())
