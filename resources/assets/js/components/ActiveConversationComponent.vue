@@ -51,6 +51,7 @@ export default {
         return {
             messages: [],
             newMessage: '',
+            contact_id: 3
         };
     },
     mounted() {
@@ -59,7 +60,7 @@ export default {
     },
     methods: {
         getMessages() {
-            axios.get('/api/messages').then(
+            axios.get(`/api/messages?contact_id=${this.contact_id}`).then(
                 (response) => {
                     console.log('response: ', response.data)
                     this.messages = response.data;
