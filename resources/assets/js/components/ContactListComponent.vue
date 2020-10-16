@@ -23,25 +23,21 @@
 
 <script>
     export default {
+        props: {
+            conversations: Array
+        },
         data() {
             return {
-                conversations: []
             };
         },
         mounted() {
             console.log('contactListComponent mounted');
-            this.getConversations();
         },
         methods: {
-            getConversations() {
-                axios.get('/api/conversations')
-                .then((response) => {
-                    console.log('response: ', response.data);
-                    this.conversations = response.data;
-                });
-            },
             selectConversation(conversation){
-                console.log('saludos:', conversation);
+                //console.log('saludos:', conversation);
+                /// emitir evento para que el componente padre pueda escuchar este evento
+                this.$emit('conversationSelected', conversation);
             }
         }  
     }

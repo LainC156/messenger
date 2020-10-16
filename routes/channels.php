@@ -14,3 +14,7 @@
 Broadcast::channel('App.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+/* callback de autorización para escuchar los canales que el usuario debe escuchar */
+Broadcast::channel('users.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});

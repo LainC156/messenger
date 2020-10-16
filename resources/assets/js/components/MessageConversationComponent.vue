@@ -19,7 +19,7 @@ export default {
         };
     },
     mounted() {
-        console.log('wbm: ', this.writtenByMe);
+        console.log('messageConversationComponent mounted: ');
     }
 }
 </script>

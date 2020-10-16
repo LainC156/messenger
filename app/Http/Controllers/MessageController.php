@@ -57,6 +57,7 @@ class MessageController extends Controller
 
          $data = [];
          $data['success'] = $message;
+         $data['message'] = $message;
          return $data;
     }
 
