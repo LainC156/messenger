@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Conversation;
+use DB;
 use Illuminate\Http\Request;
 
 class ConversationController extends Controller
@@ -20,7 +21,8 @@ class ConversationController extends Controller
             'has_blocked',
             'listen_conversations',
             'last_message',
-            'last_time'
+            'last_time',
+            DB::raw("'true' as online")
         ]);
     }
 

@@ -2,22 +2,15 @@
     <b-container fluid style="height: calc(100vh - 66px)">
         <b-row no-gutters>
             <!-- conversations list -->
-            <b-col cols="4" >
-                <contact-list-component
-                    @conversationSelected="changeActiveConversation($event)"    
-                    :conversations="conversations"
-                >
-                </contact-list-component>
+            <b-col cols="4">
+                <contact-form-component/>
+                <contact-list-component />
             </b-col>
 
             <!-- active conversation -->
             <b-col cols="8">
                 <active-conversation-component
                     v-if="this.selectedConversation"
-                    :contact_id="selectedConversation.contact_id"
-                    :contact_name="selectedConversation.contact_name"
-                    :messages="messages"
-                    @messageCreated="addMessage($event)"
                 >
                 </active-conversation-component>
             </b-col>
@@ -27,65 +20,89 @@
 <script>
 export default {
     props: {
-        user_id: Number
-    },
-    data() {
-        return {
-            selectedConversation: null,
-            messages: [],
-            conversations: []
-        };
+        user: Object
     },
     mounted() {
         console.log('messenger component mounted: ');
-        this.getConversations();
-        this.laravel_echo();
+        this.$store.commit('setUser', this.user);
+        this.$store.dispatch('getConversations')
+            .then(() => {
+                const conversationId = this.$route.params.conversationId;
+                if( conversationId  ) {
+                    const conversation = this.$store.getters.getConversationById(conversationId);
+                    this.$store.dispatch('getMessages', conversation);
+                    //console.log('conversation: ', conversation)
+                }
+            });
+        
+        
+
+        this.laravel_private_channel_echo();
+        this.laravel_presence_channel_echo();
     },
     methods: {
         changeActiveConversation(conversation){
-            this.selectedConversation = conversation;
             this.getMessages();
         },
-        laravel_echo() {
-            Echo.private(`users.${this.user_id}`)
+        laravel_private_channel_echo() {
+            Echo.private(`users.${this.user.id}`)
             .listen('MessageSent', (data) => {
                 console.log('echo response message: ', data.message);
                 const message= data.message;
                 message.written_by_me = false;
-                if(this.selectedConversation.contact_id == message.from_id) {
+                if(this.$store.state.selectedConversation.contact_id == message.from_id) {
                     /* solo la conversación seleccionada es igual a el destinatario del mensaje */
                     this.addMessage(message);
                 }
             });
         },
+        laravel_presence_channel_echo() {
+            Echo.join('messenger')
+            .here((users) => {
+                this.$store.state.conversations.forEach( (conversation, index) => {
+                    users.forEach( user => {
+                       if(user.id == conversation.contact_id) {
+                           this.$store.state.conversations[index].online = true;
+                            console.log(`user.id: ${user.id}, conversation.contact_name: ${conversation.contact_name} y conversation.online: ${ conversation.online }`);
+                       } else {
+                            this.$store.state.conversations[index].online = false;
+                            console.log(`user.id: ${user.id} y conversation ${ conversation.online }`);
+                       }
+                    });
+                });
+            })
+            .joining(
+                user => this.changeStatus(user, true)
+            )
+            .leaving(
+                user => this.changeStatus(user, false)
+            );
+        },
         getMessages() {
             console.log('llamando a getMessage()');
-            axios.get(`/api/messages?contact_id=${this.selectedConversation.contact_id}`).then(
+            axios.get(`/api/messages?contact_id=${this.$store.state.selectedConversation.contact_id}`).then(
                 (response) => {
                     console.log('mensajes: ', response.data)
-                    this.messages = response.data;
+                    this.$store.commit('newMessagesList', response.data);
                 }
             );
         },
-        addMessage(message) {
-            const conversation = this.conversations.find((conversation) => {
-                return conversation.contact_id == message.from_id || conversation.contact_id == message.to_id;
+        changeStatus(user, status) {
+            const index = this.$store.state.conversations.findIndex((conversation) => {
+                return conversation.contact_id == user.id;
             });
-            const author = this.user_id === message.from_id ? 'Tú' : conversation.contact_name;
-            conversation.last_message = `${author}: ${message.content}`;
-            conversation.last_time = message.created_at;
-            console.log('conversación a la cual se le actualizaron los datos: ', conversation);
-
-            if(this.selectedConversation.contact_id == message.from_id || this.selectedConversation.contact_id == message.to_id) {
-                this.messages.push(message);
+            if(index >= 0) {
+            this.$set(this.$store.state.conversations[index], 'online', status);
             }
+            //console.log('this.conversations[index]: ', this.conversations[index]);
         },
-        getConversations() {
-            axios.get('/api/conversations')
-            .then((response) => {
-                console.log('response: ', response.data);
-                this.conversations = response.data;
-            });
+        addMessage(message) {
+            this.$store.commit('addMessage', message);
+        }
+    },
+    computed: {
+        selectedConversation() {
+            return this.$store.state.selectedConversation;
         },
     }
 }

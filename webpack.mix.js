@@ -12,4 +12,5 @@ let mix = require('laravel-mix');
  | Notes: .disableNotifications() : remove notifications about webpack compilation
  */
 
-mix.js('resources/assets/js/app.js', 'public/js');
+mix.js('resources/assets/js/app.js', 'public/js')
+    .version();

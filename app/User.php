@@ -20,6 +20,11 @@ class User extends Authenticatable
     ];
 
     /**
+     *  Cast created_at and updated_at
+     */
+    //protected $dateFormat = 'd-m-Y';
+
+    /**
      * The attributes that should be hidden for arrays.
      *
      * @var array

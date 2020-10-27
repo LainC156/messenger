@@ -5,7 +5,6 @@
             <b-card no-body 
                 footer-bg-variant="light"
                 footer-border-variant="dark"
-                title="Conversación activa"
                 class="h-100"
             >
 
@@ -14,6 +13,7 @@
                     v-for="message in messages"
                     :key="message.id"
                     :writtenByMe="message.written_by_me"
+                    :image="message.written_by_me ? myImage : selectedConversation.contact_image"
                     >
                     {{ message.content }}
                     </message-conversation-component>
@@ -39,8 +39,8 @@
         </b-col>
         <!-- contact info -->
         <b-col cols="4">
-            <b-img rounded="circle" blank width="60" height="60" blank-color="#777" class="m-1" alt="img"></b-img>
-            <p>{{ contact_name }}</p>
+            <b-img rounded="circle" height="60" :src="selectedConversation.contact_image" class="m-1" alt="img"></b-img>
+            <p>{{ selectedConversation.contact_name }}</p>
             <b-form-checkbox>
                 Desactivar notificaciones
             </b-form-checkbox>
@@ -55,11 +55,6 @@
 </style>
 <script>
 export default {
-    props: {
-        contact_id: Number,
-        messages: Array,
-        contact_name: String
-    },
     data() {
         return {
             newMessage: '',
@@ -67,27 +62,14 @@ export default {
     },
     mounted() {
         console.log('activeconversationcomponent mounted');
-        console.log('contact_id:', this.contact_id);
-        
     },
     methods: {
         postMessage() {
-            let params = {
-                to_id: this.contact_id,
-                content: this.newMessage
-            };
-            console.log('mensaje: ', this.newMessage);
-            axios.post('/api/messages', params)
-            .then((response) => {
-                if(response.data.success) {
-                    this.newMessage = '';
-                    const message = response.data.message;
-                    message.writte_by_me = true;
-                    //this.messages.push(message);
-                    this.$emit('messageCreated', response.data.message);
-                    console.log('emitiendo evento desde postMessage()');
-                }
-            });
+            this.$store.dispatch('postMessage', this.newMessage)
+            .then(() => {
+                this.newMessage = '';
+            })
+            ;
         },
         scrollToBottom() {
             const el = document.querySelector('.card-body-scroll');
@@ -103,6 +85,18 @@ export default {
                 this.scrollToBottom();
             }, 100);
         }
+    },
+    computed: {
+        myImage() {
+            return `/img/users/${this.$store.state.user.image}`;
+        },
+        messages() {
+            return this.$store.state.messages;
+        },
+        selectedConversation() {
+            return this.$store.state.selectedConversation;
+        }
     }
+        
 }
 </script>
